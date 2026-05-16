@@ -2,14 +2,22 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_users import FastAPIUsers
+from fastapi_users.authentication import (
+    AuthenticationBackend,
+    BearerTransport,
+    JWTStrategy,
+)
+from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from agents.filter_agent import run_filter_agent
 from agents.schemas import CitizenReportInput, FilterAgentResult
-from app.db import DATABASE_URL, engine
+from app.db import DATABASE_URL, engine, SessionLocal, get_db_session, create_db_and_tables
+from app.models import User, UserCreate, UserUpdate, UserResponse
 
 
 def _cors_origins() -> list[str]:
@@ -26,6 +34,67 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# FastAPI-Users setup
+async def get_user_db():
+    if SessionLocal is None:
+        raise HTTPException(status_code=503, detail="Database is not configured")
+    session = SessionLocal()
+    try:
+        yield SQLAlchemyUserDatabase(session, User)
+    finally:
+        session.close()
+
+
+SECRET = os.getenv("SECRET_KEY")
+if not SECRET:
+    raise ValueError("SECRET_KEY environment variable must be set")
+
+bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
+
+
+def get_jwt_strategy() -> JWTStrategy:
+    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+
+
+auth_backend = AuthenticationBackend(
+    name="jwt",
+    transport=bearer_transport,
+    get_strategy=get_jwt_strategy,
+)
+
+fastapi_users = FastAPIUsers[User, str](
+    get_user_db,
+    [auth_backend],
+)
+
+current_active_user = fastapi_users.current_user(active=True)
+
+# Include auth routes
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+
+app.include_router(
+    fastapi_users.get_register_router(UserResponse, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
+
+app.include_router(
+    fastapi_users.get_user_router(UserResponse, UserUpdate),
+    prefix="/users",
+    tags=["users"],
+)
+
+
+@app.on_event("startup")
+def on_startup() -> None:
+    create_db_and_tables()
+
 
 
 @app.get("/health")
@@ -79,4 +148,4 @@ async def agent_filter(
     )
     vrijednost = await run_filter_agent(report)
 
-    
+

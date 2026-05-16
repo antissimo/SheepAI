@@ -31,6 +31,7 @@ services:
     environment:
       TZ: Europe/Zagreb
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/sheep_ai
+      SECRET_KEY: dev-secret-key-change-in-production
       CORS_ALLOW_ORIGINS: http://localhost:3000
     depends_on:
       postgres:
