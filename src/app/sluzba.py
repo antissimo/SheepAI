@@ -1,23 +1,23 @@
 from enum import Enum
 
-class Sluzba(str, Enum):
-    POLICIJA = "policija"
-    VATROGASCI = "vatrogasci"
+class Sluzba(Enum):
+    POLICIJA = 1
+    VATROGASCI = 2
+    CISTOCA = 3
+    KOMUNALNO_REDARSTVO = 4
+    ZELENILO = 5
+    VODOVOD_KANALIZACIJA = 6
+    ODRZAVANJE_CESTA = 7
+    PROMET = 8
+    JAVNI_PRIJEVOZ = 9
+    JAVNA_RASVJETA = 10
+    GRADJEVINSKI_NADZOR = 11
+    HITNA_MEDICINA = 12
+    GRADSKA_UPRAVA = 13
+    NEPOZNATO = 99
 
-    CISTOCA = "cistoca"
-    KOMUNALNO_REDARSTVO = "komunalno_redarstvo"
-    ZELENILO = "zelenilo" 
-    VODOVOD = "vodovod_kanalizacija"
-    CESTE = "odrzavanje_cesta"
-
-    PROMET = "promet"
-    JAVNI_PRIJEVOZ = "javni_prijevoz"
-
-    JAVNA_RASVJETA = "javna_rasvjeta"
-    GRADJEVINSKI_NADZOR = "gradjevinski_nadzor"
-
-    HITNA_MEDICINA = "hitna_medicina"
-
-    GRADSKA_UPRAVA = "gradska_uprava"
-
-    NEPOZNATO = "nepoznato"
+    @staticmethod
+    def ispisi():
+        print("=== SLUŽBE ===")
+        for sluzba in Sluzba:
+            print(f"{sluzba.value} - {sluzba.name}")

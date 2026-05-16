@@ -77,4 +77,6 @@ async def agent_filter(
         lng=lng,
         district_suggestion=district_suggestion,
     )
-    return await run_filter_agent(report)
+    vrijednost = await run_filter_agent(report)
+
+    
