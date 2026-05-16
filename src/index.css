@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; margin: 0; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #060c16;
+    color: #f1f5f9;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+}
+
+@layer components {
+  .glass {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+  .glass-card {
+    background: rgba(15,25,45,0.60);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+  }
+  .glow-blue { box-shadow: 0 0 40px rgba(56, 189, 248, 0.12); }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-150 cursor-pointer border-0;
+  }
+  .btn-primary  { @apply btn bg-sky-400 text-slate-900 hover:bg-sky-300 shadow-lg; }
+  .btn-secondary { @apply btn bg-white/10 text-white hover:bg-white/15 border border-white/10; }
+  .btn-ghost    { @apply btn text-slate-400 hover:text-white hover:bg-white/5; }
+  .input {
+    @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400/60 transition-all;
+  }
+  .nav-item {
+    @apply flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer border-0 w-full text-left;
+  }
+  .nav-active { @apply text-white border border-white/10; background: rgba(255,255,255,0.08); }
+}
