@@ -4,6 +4,7 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV AUTOGEN_USE_DOCKER=False
+ENV PYTHONPATH=/app
 
 
 WORKDIR /app
@@ -22,7 +23,4 @@ COPY src /app
 EXPOSE 8000
 
 
-# Worker count is now configurable: Redis-backed cancellation handles cross-worker
-# coordination, so the single-worker constraint is lifted. Set GUNICORN_WORKERS in
-# the ECS task definition to tune per task size (e.g. 2 * vCPU + 1). Default: 2.
 CMD ["sh", "-c", "gunicorn -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-2} --timeout 300"]

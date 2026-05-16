@@ -1,97 +1,51 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sheepai_postgres
+    environment:
+      POSTGRES_DB: sheep_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sheep_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fastapi_backend
-    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
+    container_name: sheepai_backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./src:/app
-      - ./data:/app/data
     ports:
       - "8000:8000"
     environment:
       TZ: Europe/Zagreb
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/sheep-ai
-      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/sheep_ai
       CORS_ALLOW_ORIGINS: http://localhost:3000
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-    env_file:
-      - .env
     depends_on:
-      minio:
-  condition: service_healthy
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
+
   frontend:
-    image: sheep-ai-frontend
-    container_name: frontend
     build:
       context: ./src/frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: sheepai_frontend
     ports:
       - "3000:80"
     depends_on:
       - backend
-  minio:
-    image: minio/minio
-    container_name: minio
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/ready" ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 5s
-    ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # Web UI
-    volumes:
-      - minio_data:/data
 
-
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 5s
-    ports:
-      - "6379:6379"
-
-
-  postgres:
-    image: pgvector/pgvector:pg16
-    container_name: postgres_db
-    environment:
-      POSTGRES_DB: sheep-ai
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d sheep-ai"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 5s
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./initdb/sheep_database_dump.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
-    ports:
-      - "5432:5432"
-
-
-
-
-  volumes:
-  minio_data:
+volumes:
   postgres_data:
