@@ -109,3 +109,43 @@ CLASSIFICATION AGENT
 (određuje službu i hitnost)
    ↓
 JSON OUTPUT
+```
+
+## Filter Agent (AutoGen + Ollama)
+
+Instalacija:
+
+```bash
+pip install -r requirements.txt
+```
+
+Pokretanje Ollame:
+
+```bash
+ollama serve
+ollama pull llama3.1:8b
+```
+
+Opcionalno za vision:
+
+```bash
+ollama pull llava
+export OLLAMA_USE_VISION=true
+export OLLAMA_VISION_MODEL=llava
+```
+
+Pokretanje backenda (postojeća komanda projekta):
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Test endpoint:
+
+```bash
+curl -X POST http://localhost:8000/agent/filter \
+  -F "text=Na Žnjanu je razbijena kanta za smeće i smeće je po cesti već tri dana" \
+  -F "lat=43.503" \
+  -F "lng=16.470" \
+  -F "district_suggestion=Žnjan"
+```

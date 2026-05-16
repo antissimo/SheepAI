@@ -25,6 +25,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./src:/app
+      - ./agents:/app/agents
     ports:
       - "8000:8000"
     environment:

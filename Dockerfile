@@ -18,6 +18,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 
 COPY src /app
+COPY agents /app/agents
 
 
 EXPOSE 8000

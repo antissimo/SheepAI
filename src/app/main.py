@@ -1,10 +1,14 @@
 import os
+from pathlib import Path
+from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+from agents.filter_agent import run_filter_agent
+from agents.schemas import CitizenReportInput, FilterAgentResult
 from app.db import DATABASE_URL, engine
 
 
@@ -45,3 +49,32 @@ def health() -> dict[str, object]:
 @app.get("/")
 def root() -> dict[str, str]:
     return {"message": "SheepAI API"}
+
+
+@app.post("/agent/filter", response_model=FilterAgentResult)
+async def agent_filter(
+    text: str | None = Form(default=None),
+    lat: float | None = Form(default=None),
+    lng: float | None = Form(default=None),
+    district_suggestion: str | None = Form(default=None),
+    image: UploadFile | None = File(default=None),
+) -> FilterAgentResult:
+    image_path: str | None = None
+    if image is not None:
+        tmp_dir = Path("/tmp/split_reports")
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+        suffix = Path(image.filename or "").suffix
+        filename = f"{uuid4().hex}{suffix}"
+        target = tmp_dir / filename
+        contents = await image.read()
+        target.write_bytes(contents)
+        image_path = str(target)
+
+    report = CitizenReportInput(
+        text=text,
+        image_path=image_path,
+        lat=lat,
+        lng=lng,
+        district_suggestion=district_suggestion,
+    )
+    return await run_filter_agent(report)
